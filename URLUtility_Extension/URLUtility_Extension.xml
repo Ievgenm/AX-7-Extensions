@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>URLUtility_Extension</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+using Microsoft.Dynamics.AX.Framework.Utilities;
+using Microsoft.Dynamics.@Client.ServerForm.Contexts;
+ 
+/// <summary>
+/// The class <c>URLUtility_Extension</c> contains extension methods for the <c>URLUtility</c> class.
+/// </summary>
+[ExtensionOf(classStr(URLUtility))]
+public static class URLUtility_Extension
+{
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>generateRecordUrl</Name>
+				<Source><![CDATA[
+    public static str generateRecordUrl(str _menuItemName, MenuItemType _menuItemType, DataSourceName _dataSourceName, Map _indexFieldValuesMap, DataAreaId _dataAreaId = curExt())
+    {
+        System.Uri host                     = SessionContext::Get_Current().Get_RequestUrl();
+        UrlHelper.UrlGenerator generator    = new UrlHelper.UrlGenerator();
+        generator.MenuItemName              = _menuItemName;
+        generator.MenuItemType              = _menuItemType;
+        generator.HostUrl                   = host.GetLeftPart(System.UriPartial::Path);
+        generator.Company                   = _dataAreaId;
+        generator.EncryptRequestQuery       = true;
+ 
+        if (_dataSourceName && _indexFieldValuesMap)
+        {
+            MapEnumerator mapEnumerator = _indexFieldValuesMap.getEnumerator();
+ 
+            var requestQueryParameterCollection = generator.RequestQueryParameterCollection;
+ 
+            while (mapEnumerator.moveNext())
+            {
+                requestQueryParameterCollection.UpdateOrAddEntry(_dataSourceName, mapEnumerator.currentKey(), mapEnumerator.currentValue());
+            }
+        }
+ 
+        return generator.GenerateFullUrl().AbsoluteUri;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>generateRecordUrlFromDataSource</Name>
+				<Source><![CDATA[
+    public static str generateRecordUrlFromDataSource(FormDataSource _formDataSource)
+    {
+        FormRun         formRun         = _formDataSource.formRun();
+        str             menuItemName    = formRun.args().menuItemName();
+        MenuItemType    menuItemType    = formRun.args().menuItemType();
+        DataSourceName  dataSourceName  = _formDataSource.name();
+ 
+        TableId   tableId   = _formDataSource.table();
+        DictTable dictTable = new DictTable(tableId);
+        DictIndex dictIndex = new DictIndex(tableId, dictTable.primaryIndex());
+ 
+        int     fieldCount          = dictIndex.numberOfFields();
+        Map     indexFieldValuesMap = new Map(Types::String, Types::String);
+        Common  record              = _formDataSource.cursor();
+        FieldId primaryKeyFieldId;
+ 
+        for (int fieldIndex = 1; fieldIndex <= fieldCount; fieldIndex++)
+        {
+            primaryKeyFieldId = dictIndex.field(fieldIndex);
+ 
+            indexFieldValuesMap.insert(fieldId2Name(tableId, primaryKeyFieldId), any2Str(record.(primaryKeyFieldId)));
+        }
+ 
+        return URLUtility::generateRecordUrl(menuItemName, menuItemType, dataSourceName, indexFieldValuesMap, record.DataAreaId);
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>
