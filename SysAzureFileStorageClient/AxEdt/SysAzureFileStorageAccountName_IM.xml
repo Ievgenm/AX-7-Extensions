@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxEdt xmlns:i="http://www.w3.org/2001/XMLSchema-instance" xmlns=""
+	i:type="AxEdtString">
+	<Name>SysAzureFileStorageAccountName_IM</Name>
+	<HelpText>Storage account name</HelpText>
+	<Label>Account name</Label>
+	<ReferenceTable>SysAzureFileStorageAccountTable_IM</ReferenceTable>
+	<ArrayElements />
+	<Relations />
+	<TableReferences>
+		<AxEdtTableReference>
+			<RelatedField>AccountName</RelatedField>
+			<Table>SysAzureFileStorageAccountTable_IM</Table>
+		</AxEdtTableReference>
+	</TableReferences>
+	<StringSize>24</StringSize>
+</AxEdt>

@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxTable xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>SysAzureFileStorageAccountTable_IM</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+public class SysAzureFileStorageAccountTable_IM extends common
+{
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>accountKeyEdit</Name>
+				<Source><![CDATA[
+    public edit SysAzureFileStorageAccountKey_IM accountKeyEdit(boolean _set, SysAzureFileStorageAccountKey_IM _value)
+    {
+        return Global::editEncryptedField(this, _value, fieldNum(SysAzureFileStorageAccountTable_IM, AccountKey), _set);
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>exists</Name>
+				<Source><![CDATA[
+    public static boolean exists(SysAzureFileStorageAccountName_IM _accountName)
+    {
+        return _accountName && (select firstonly RecId from SysAzureFileStorageAccountTable_IM
+            where SysAzureFileStorageAccountTable_IM.AccountName == _accountName).RecId != 0;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>find</Name>
+				<Source><![CDATA[
+    public static SysAzureFileStorageAccountTable_IM find(SysAzureFileStorageAccountName_IM _accountName, boolean _forUpdate = false)
+    {
+        SysAzureFileStorageAccountTable_IM sysAzureFileStorageAccountTable;
+
+        if (_accountName)
+        {
+            sysAzureFileStorageAccountTable.selectForUpdate(_forUpdate);
+
+            select firstonly sysAzureFileStorageAccountTable
+                where sysAzureFileStorageAccountTable.AccountName == _accountName;
+        }
+
+        return sysAzureFileStorageAccountTable;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>accountKey</Name>
+				<Source><![CDATA[
+    public SysAzureFileStorageAccountKey_IM accountKey()
+    {
+        return this.accountKeyEdit(false, '');
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+	<FormRef>SysFileStorageAccountTable_IM</FormRef>
+	<Label>Azure File Storage Accounts</Label>
+	<SubscriberAccessLevel>
+		<Read>Allow</Read>
+	</SubscriberAccessLevel>
+	<TableGroup>Parameter</TableGroup>
+	<TitleField1>AccountName</TitleField1>
+	<CacheLookup>Found</CacheLookup>
+	<ClusteredIndex>AccountNameIdx</ClusteredIndex>
+	<PrimaryIndex>AccountNameIdx</PrimaryIndex>
+	<SaveDataPerCompany>No</SaveDataPerCompany>
+	<DeleteActions />
+	<FieldGroups>
+		<AxTableFieldGroup>
+			<Name>AutoReport</Name>
+			<Fields>
+				<AxTableFieldGroupField>
+					<DataField>AccountName</DataField>
+				</AxTableFieldGroupField>
+			</Fields>
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>AutoLookup</Name>
+			<Fields />
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>AutoIdentification</Name>
+			<AutoPopulate>Yes</AutoPopulate>
+			<Fields />
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>AutoSummary</Name>
+			<Fields />
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>AutoBrowse</Name>
+			<Fields />
+		</AxTableFieldGroup>
+		<AxTableFieldGroup>
+			<Name>Account</Name>
+			<Label>Account</Label>
+			<Fields>
+				<AxTableFieldGroupField>
+					<DataField>AccountName</DataField>
+				</AxTableFieldGroupField>
+			</Fields>
+		</AxTableFieldGroup>
+	</FieldGroups>
+	<Fields>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldString">
+			<Name>AccountName</Name>
+			<AllowEdit>No</AllowEdit>
+			<ExtendedDataType>SysAzureFileStorageAccountName_IM</ExtendedDataType>
+			<Mandatory>Yes</Mandatory>
+		</AxTableField>
+		<AxTableField xmlns=""
+			i:type="AxTableFieldContainer">
+			<Name>AccountKey</Name>
+			<ExtendedDataType>EncryptedField</ExtendedDataType>
+			<IgnoreEDTRelation>Yes</IgnoreEDTRelation>
+			<Visible>No</Visible>
+		</AxTableField>
+	</Fields>
+	<FullTextIndexes />
+	<Indexes>
+		<AxTableIndex>
+			<Name>AccountNameIdx</Name>
+			<AlternateKey>Yes</AlternateKey>
+			<Fields>
+				<AxTableIndexField>
+					<DataField>AccountName</DataField>
+				</AxTableIndexField>
+			</Fields>
+		</AxTableIndex>
+	</Indexes>
+	<Mappings />
+	<Relations />
+	<StateMachines />
+</AxTable>

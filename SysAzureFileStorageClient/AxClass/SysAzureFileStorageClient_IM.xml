@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>SysAzureFileStorageClient_IM</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+using Microsoft.Azure;
+using Microsoft.WindowsAzure.Storage;
+using Microsoft.WindowsAzure.Storage.Blob;
+using Microsoft.WindowsAzure.Storage.File;
+
+/// <summary>
+/// The <c>SysAzureFileStorageClient_IM</c> class implements the base functionality for Azure File Storage
+/// </summary>
+public class SysAzureFileStorageClient_IM
+{
+    CloudFileClient fileClient;
+    CloudFileShare  share;
+    CloudFileDirectory rootDir;
+
+    SysAzureFileStorageAccountName_IM accountName;
+    str shareName;
+
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>new</Name>
+				<Source><![CDATA[
+    protected void new()
+    {
+
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>init</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Initializes client.
+    /// </summary>
+    protected void init()
+    {
+        if (!SysAzureFileStorageAccountTable_IM::exists(accountName))
+        {
+            throw error(strFmt("Account %1 does not exist in Azure storage accounts table", accountName));
+        }
+
+        try
+        {
+            var storageCredentials = new Microsoft.WindowsAzure.Storage.Auth.StorageCredentials(accountName, SysAzureFileStorageAccountTable_IM::find(accountName).accountKey());
+
+            CloudStorageAccount storageAccount = new Microsoft.WindowsAzure.Storage.CloudStorageAccount(storageCredentials, true);
+
+            fileClient = storageAccount.CreateCloudFileClient();
+
+            share = fileClient.GetShareReference(shareName);
+
+            if (share.Exists(null, null))
+            {
+                rootDir = share.GetRootDirectoryReference();
+            }
+            else
+            {
+                throw error(strFmt("Share %1 does not exist", shareName));
+            }
+        }
+        catch (Exception::CLRError)
+        {
+            throw error(AifUtil::getClrErrorMessage());
+        }
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>construct</Name>
+				<Source><![CDATA[
+    protected static SysAzureFileStorageClient_IM construct()
+    {
+        return new SysAzureFileStorageClient_IM();
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>parmAccountName</Name>
+				<Source><![CDATA[
+    public SysAzureFileStorageAccountName_IM parmAccountName(SysAzureFileStorageAccountName_IM _accountName = accountName)
+    {
+        accountName = _accountName;
+        return accountName;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>parmShareName</Name>
+				<Source><![CDATA[
+    public str parmShareName(str _shareName = shareName)
+    {
+        shareName = _shareName;
+        return shareName;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>newFromAzureStorageAccountNameShare</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Creates an instance of the <c>SysAzureFileStorageClient_IM</c> class.
+    /// </summary>
+    /// <param name = "_accountName">Azure file storage account name</param>
+    /// <param name = "_shareName">Azure file share name</param>
+    /// <returns>A new instance of an <c>SysAzureFileStorageClient_IM</c> class.</returns>
+    public static SysAzureFileStorageClient_IM newFromAzureStorageAccountNameShare(SysAzureFileStorageAccountName_IM _accountName, str _shareName)
+    {
+        SysAzureFileStorageClient_IM storageClient = SysAzureFileStorageClient_IM::construct();
+
+        storageClient.parmAccountName(_accountName);
+        storageClient.parmShareName(_shareName);
+
+        storageClient.init();
+
+        return storageClient;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>newFromAzureStorageAccountNameShareCache</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Retrieves existing instance from a cache or creates an instance of the <c>SysAzureFileStorageClient_IM</c> class.
+    /// </summary>
+    /// <param name = "_accountName">Azure file storage account name</param>
+    /// <param name = "_shareName">Azure file share name</param>
+    /// <param name = "_cacheOwner">Cache owner string</param>
+    /// <returns>A new or cached instance of an <c>SysAzureFileStorageClient</c> class.</returns>
+    public static SysAzureFileStorageClient_IM newFromAzureStorageAccountNameShareCache(str _accountName, str _shareName, str _cacheOwner)
+    {
+        SysAzureFileStorageClient_IM storageClient;
+
+        container cacheKey = [_accountName, _shareName];
+
+        if (appl.globalCache().isSet(_cacheOwner, cacheKey))
+        {
+            storageClient = appl.globalCache().get(_cacheOwner, cacheKey);
+        }
+        else
+        {
+            storageClient = SysAzureFileStorageClient_IM::newFromAzureStorageAccountNameShare(_accountName, _shareName);
+            appl.globalCache().set(_cacheOwner, cacheKey, storageClient);
+        }
+
+        return storageClient;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>readToStream</Name>
+				<Source><![CDATA[
+    /// <summary>
+    /// Reads file to a memory stream
+    /// </summary>
+    /// <param name = "_fileName">File to read</param>
+    /// <returns>A memory stream containing file content</returns>
+    public System.IO.Stream readToStream(str _fileName)
+    {
+        System.IO.MemoryStream memoryStream;
+
+        try
+        {
+            str directory = System.IO.Path::GetDirectoryName(_fileName);
+            str fileName  = System.IO.Path::GetFileName(_fileName);
+
+
+            CloudFileDirectory fileDir = directory ? rootDir.GetDirectoryReference(directory) : rootDir;
+
+            if (fileDir.Exists(null, null))
+            {
+                CloudFile file = fileDir.GetFileReference(fileName);
+
+                // Ensure that the file exists.
+                if (file.Exists(null, null))
+                {
+                    memoryStream = new System.IO.MemoryStream();
+
+                    file.DownloadToStream(memoryStream, null, null, null);
+
+                    if (memoryStream.CanSeek)
+                    {
+                        memoryStream.Seek(0, System.IO.SeekOrigin::Begin);
+                    }
+                }
+                else
+                {
+                    throw error(strFmt("File %1 does not exist in directory %2", fileName, directory));
+                }
+            }
+            else
+            {
+                throw error(strFmt("Directory %1 does not exist", directory));
+            }
+        }
+        catch (Exception::CLRError)
+        {
+            throw error(AifUtil::getClrErrorMessage());
+        }
+
+        return memoryStream;
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>
