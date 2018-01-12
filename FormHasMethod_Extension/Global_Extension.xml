@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>Global_Extension</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+using System.Reflection;
+
+/// <summary>
+/// The class <c>Global_Extension</c> contains extension methods for the <c>Global</c> class.
+/// </summary>
+[ExtensionOf(classStr(Global))]
+public static final class Global_Extension
+{
+}
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>formHasMethod</Name>
+				<Source><![CDATA[
+    static boolean formHasMethod(FormRun fr, IdentifierName methodName)
+    {
+        boolean ret = next formHasMethod(fr, methodName);
+        
+        if (!ret)
+        {
+            ret = Global::formExtensionHasMethod_IM(fr, methodName);
+        }
+
+        return ret;
+
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>formExtensionHasMethod_IM</Name>
+				<Source><![CDATA[
+    private static boolean formExtensionHasMethod_IM(FormRun _formRun, IdentifierName _methodName)
+    {
+        if (!_formRun || !_methodName)
+        {
+            return false;
+        }
+
+        boolean ret = false;
+
+        AmbiguousMatchException ambiguousMatchException;
+
+        try
+        {
+            System.Object[] extensions = Microsoft.Dynamics.Ax.Xpp.ExtensionClassSupport::GetExtensionsOnType(_formRun.GetType(), true);
+
+            if (extensions)
+            {
+                System.Type    formRunExtensionType;
+                System.Reflection.MethodInfo    methodInfo;
+                var  bindingFlags = BindingFlags::Public | BindingFlags::Instance | BindingFlags::Static | BindingFlags::IgnoreCase;
+
+                for (int i = 0; i < extensions.Length; i++)
+                {
+                    formRunExtensionType = extensions.GetValue(i);
+
+                    methodInfo = formRunExtensionType.GetMethod(_methodName, bindingFlags);
+
+                    if (methodInfo)
+                    {
+                        ret = true;
+                        break;
+                    }
+                }
+            }
+        }
+        catch (ambiguousMatchException)
+        {
+            // ambiguous means there is more than one result,
+            // which means: a method with that name does exist
+            return true;
+        }
+        catch (Exception::CLRError)
+        {
+            error(CLRInterop::getLastException().ToString());
+        }
+
+        return ret;
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>
