@@ -44,8 +44,6 @@ public static final class Global_Extension
 
         boolean ret = false;
 
-        AmbiguousMatchException ambiguousMatchException;
-
         try
         {
             System.Object[] extensions = Microsoft.Dynamics.Ax.Xpp.ExtensionClassSupport::GetExtensionsOnType(_formRun.GetType(), true);
@@ -60,21 +58,19 @@ public static final class Global_Extension
                 {
                     formRunExtensionType = extensions.GetValue(i);
 
-                    methodInfo = formRunExtensionType.GetMethod(_methodName, bindingFlags);
+                    var methodsInfo = formRunExtensionType.GetMethods(bindingFlags);
 
-                    if (methodInfo)
+                    for (int n = 0; n < methodsInfo.get_Length(); n++)
                     {
-                        ret = true;
-                        break;
+                        methodInfo = methodsInfo.getValue(n);
+                        if (methodInfo.Name == _methodName)
+                        {
+                            ret = true;
+                            break;
+                        }
                     }
                 }
             }
-        }
-        catch (ambiguousMatchException)
-        {
-            // ambiguous means there is more than one result,
-            // which means: a method with that name does exist
-            return true;
         }
         catch (Exception::CLRError)
         {
